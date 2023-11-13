@@ -43,19 +43,21 @@
 	<desc>Teeline shorthand outline for '{outlineName}'</desc>
 	<path class="line" d="M 80 460 H 650" />
 	{#each outlineObject.lines as line, i}
-		<path
+		{@const length = Math.ceil(SVGPathCommander.getTotalLength(line.path))}
+		<g
 			style={Object.entries({
-				length: Math.ceil(SVGPathCommander.getTotalLength(line.path)),
+				length,
 				speed: drawingSpeed,
 				delay: inferAnimationDelay(i, outlineObject.lines, drawingSpeed)
 			})
 				.map(([key, value]) => `--${key}: ${value}`)
 				.join(';')}
 			transform="translate({line.translateValues})"
-			class="path"
-			stroke-dasharray={length}
-			d={line.path}
-		/>
+			fill="none"
+		>
+			<path class="dot" stroke-dasharray="0 {1 + length}" d={line.path} />
+			<path class="path" stroke-dasharray={length} d={line.path} />
+		</g>
 	{/each}
 </svg>
 
@@ -78,16 +80,23 @@
 	.path {
 		stroke-width: 10;
 		stroke: currentColor;
-		stroke-dasharray: var(--length);
 	}
-
-	:global(.outline-container:hover) .path {
+	:global(.outline-container:hover) :is(.path, .dot) {
 		animation-name: dash;
 		animation-duration: calc(1s * var(--length) / var(--speed));
 		animation-timing-function: ease-out;
 		animation-delay: var(--delay);
 		animation-iteration-count: 1;
 		animation-fill-mode: both;
+	}
+
+	.dot {
+		stroke: lightgrey;
+		stroke-width: 96;
+		stroke-opacity: 0.6;
+		stroke-dashoffset: 1;
+		animation-fill-mode: none !important;
+		mix-blend-mode: multiply;
 	}
 
 	@keyframes dash {
